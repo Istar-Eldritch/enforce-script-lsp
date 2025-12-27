@@ -332,7 +332,7 @@ impl Lexer {
     }
 
     fn scan_number(&mut self, line: usize, column: usize, offset: usize) -> Token {
-        let mut start = self.position;
+        let start = self.position;
 
         while !self.is_at_end() && self.current_char().is_ascii_digit() {
             self.advance();
@@ -359,7 +359,6 @@ impl Lexer {
         {
             is_hex = true;
             self.advance();
-            start = self.position;
             while !self.is_at_end() && self.current_char().is_ascii_hexdigit() {
                 self.advance();
             }
@@ -383,7 +382,15 @@ impl Lexer {
             Token::new(TokenType::FloatLiteral(value), lexeme, line, column, offset)
         } else {
             let value = if is_hex {
-                i64::from_str_radix(&lexeme, 16).unwrap()
+                i64::from_str_radix(
+                    &lexeme
+                        .to_lowercase()
+                        .split_inclusive('x')
+                        .last()
+                        .unwrap_or("0"),
+                    16,
+                )
+                .unwrap()
             } else {
                 lexeme.parse::<i64>().unwrap_or(0)
             };
